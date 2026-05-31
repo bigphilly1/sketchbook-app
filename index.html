@@ -390,6 +390,29 @@ h1.title {
   color: var(--ink-faint); min-width: 60px; text-align: right;
 }
 
+/* ── How it works ── */
+.how-block {
+  display: flex; gap: 28px; margin-bottom: 44px; max-width: var(--maxw);
+  padding-bottom: 44px; border-bottom: 1px solid var(--rule-soft);
+}
+.how-block:last-of-type { border-bottom: none; }
+.how-num {
+  font-family: var(--font-m); font-size: 11px; letter-spacing: 0.14em;
+  color: var(--accent); flex: 0 0 28px; padding-top: 4px;
+}
+.how-title {
+  font-family: var(--font-d); font-size: 22px; font-weight: 400;
+  color: var(--ink); margin-bottom: 12px; line-height: 1.2;
+}
+.how-body {
+  font-size: 16px; color: var(--ink-soft); line-height: 1.75;
+}
+.how-body em  { color: var(--ink); font-style: italic; }
+.how-body code {
+  font-family: var(--font-m); font-size: 14px; background: var(--paper-deep);
+  padding: 1px 5px; border-radius: 3px; color: var(--ink-soft);
+}
+
 @media (max-width: 720px) {
   .stage { padding: 36px 22px 100px; }
   .masthead-inner { padding: 12px 22px; }
@@ -411,6 +434,7 @@ h1.title {
     </div>
     <div style="display:flex; align-items:center; gap:20px;">
       <span class="save-badge" id="saveBadge"></span>
+      <button class="nav-link" onclick="nav('how')">How it works</button>
       <button class="nav-link" onclick="nav('settings')">Settings</button>
     </div>
   </div>
@@ -598,6 +622,75 @@ h1.title {
     </div>
 
     <button class="btn-text" onclick="nav('ideas')" style="margin-top:8px">← Back to ideas</button>
+  </div></div>
+</div>
+
+<!-- ████ HOW IT WORKS ████ -->
+<div class="screen" id="screen-how">
+  <div class="stage"><div class="col">
+    <p class="eyebrow">Under the hood</p>
+    <h1 class="title">How Sketchbook works</h1>
+    <p class="lede" style="margin-bottom:52px">No accounts. No servers. Your ideas stay yours.</p>
+
+    <div class="how-block">
+      <div class="how-num">01</div>
+      <div>
+        <div class="how-title">Your ideas live in your browser</div>
+        <p class="how-body">When you type something in Sketchbook, it saves automatically to your browser's built-in storage — called <em>localStorage</em>. Think of it like a notepad that lives inside your browser tab. Nothing is sent to any server. No account is required. Close the tab, reopen it tomorrow: your ideas are still there. The catch: they live in this browser, on this device. Clear your browser data and they're gone — which is why GitHub backup exists.</p>
+      </div>
+    </div>
+
+    <div class="how-block">
+      <div class="how-num">02</div>
+      <div>
+        <div class="how-title">Auto-save fires every keystroke</div>
+        <p class="how-body">There's no Save button. Every time you type, a 0.8-second timer resets. When you stop typing for 0.8 seconds, the current state of your idea — title, beats, stage — is written to browser storage. The "Saving… / Saved" indicator in the top bar reflects this. If you close the window mid-word, you lose at most one second of work.</p>
+      </div>
+    </div>
+
+    <div class="how-block">
+      <div class="how-num">03</div>
+      <div>
+        <div class="how-title">Versions are snapshots, not overwrites</div>
+        <p class="how-body">When you click <em>Save as new version</em>, your current beats are locked — frozen exactly as they are — and a fresh copy opens for editing. Version 1 doesn't change. Version 2 starts from where Version 1 ended. You can flip between them using the version pills in the editor. This means you can explore a completely different direction without losing what you had. Most writers end up with 2–4 versions before something clicks.</p>
+      </div>
+    </div>
+
+    <div class="how-block">
+      <div class="how-num">04</div>
+      <div>
+        <div class="how-title">GitHub backup: your ideas as real files</div>
+        <p class="how-body">If you connect a GitHub repository in Settings, every auto-save also commits your idea as a <code>.md</code> (markdown) file to that repo. GitHub is a platform developers use to store and version-control code — but it works just as well for text. Each idea becomes a file named something like <code>saltwater_v2.md</code>. You can see every change ever made to it, recover old versions, and access it from any device. This is proper version control — the same system used to build every major app in the world — applied to your creative work.</p>
+        <p class="how-body" style="margin-top:12px">To set it up: create a free GitHub account, make a new private repository (e.g. <em>my-ideas</em>), generate a Personal Access Token with <em>repo</em> permissions, and paste both into Settings. Sketchbook does the rest silently.</p>
+      </div>
+    </div>
+
+    <div class="how-block">
+      <div class="how-num">05</div>
+      <div>
+        <div class="how-title">Export is just a file download</div>
+        <p class="how-body">The Share screen converts your idea into a <code>.md</code> file — plain text with light formatting markers (<code>#</code> for headings, <code>-</code> for bullets). This format opens in Final Draft, Celtx, Google Docs, Word, or any text editor. It's deliberately simple: no proprietary format, no lock-in. If Sketchbook disappeared tomorrow, every exported file would still be readable in Notepad.</p>
+      </div>
+    </div>
+
+    <div class="how-block">
+      <div class="how-num">06</div>
+      <div>
+        <div class="how-title">Beat suggestions are AI-generated, opt-in only</div>
+        <p class="how-body">The <em>Get beat ideas</em> button pulls from a curated bank of structural beat patterns — common story shapes used across film, theatre, and television. They're not written by AI on the fly; they're pre-written prompts designed to unblock, not to write the story for you. Click one to append it to your beats. Click <em>Different approach</em> to rotate to another set. Nothing is added without your action. You remain the author — the suggestions are a trampoline, not a script.</p>
+      </div>
+    </div>
+
+    <div class="how-block">
+      <div class="how-num">07</div>
+      <div>
+        <div class="how-title">Privacy: what goes where</div>
+        <p class="how-body">Without GitHub connected: your ideas never leave your device. With GitHub connected: your ideas are committed to your private repository on GitHub's servers. GitHub's privacy policy applies to that data — your repo is private by default, visible only to you. Sketchbook itself has no backend, no database, no analytics, and no account system. There is nothing to hack because there is nothing stored centrally.</p>
+      </div>
+    </div>
+
+    <hr style="border:none; border-top:1px solid var(--rule-soft); margin:52px 0 32px;">
+    <button class="btn-text" onclick="nav('ideas')">← Back to your ideas</button>
   </div></div>
 </div>
 
