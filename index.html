@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sketchbook — Actor Writer Director</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:        #0C0B09;
+      --surface:   #141210;
+      --card:      #1C1A17;
+      --border:    #2C2926;
+      --border-hi: #3D3830;
+      --amber:     #C4923A;
+      --amber-dim: #7A5A22;
+      --amber-glow:rgba(196,146,58,0.08);
+      --cream:     #EAE3D8;
+      --muted:     #7A7067;
+      --muted-hi:  #A09585;
+      --danger:    #B85454;
+      --success:   #5A9A6A;
+      --font-head: 'Cormorant Garamond', Georgia, serif;
+      --font-body: 'Inter', system-ui, sans-serif;
+      --font-mono: 'Courier Prime', 'Courier New', monospace;
+      --radius:    6px;
+      --radius-lg: 10px;
+      --transition: 200ms ease;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--cream);
+      line-height: 1.6;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+    .app { display: flex; flex-direction: column; min-height: 100vh; }
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 28px; height: 56px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .topbar-logo {
+      font-family: var(--font-head); font-size: 18px; font-weight: 300;
+      letter-spacing: 0.06em; color: var(--cream); cursor: pointer;
+    }
+    .topbar-logo span { color: var(--amber); }
+    .topbar-right { display: flex; align-items: center; gap: 16px; }
+    .save-indicator {
+      font-size: 12px; color: var(--muted); min-width: 80px;
+      text-align: right; transition: color var(--transition);
+    }
+    .save-indicator.saving { color: var(--amber); }
+    .save-indicator.saved  { color: var(--success); }
+    .icon-btn {
+      background: none; border: none; color: var(--muted); cursor: pointer;
+      padding: 6px 10px; border-radius: var(--radius);
+      transition: color var(--transition), background var(--transition);
+      display: flex; align-items: center; gap: 6px;
+      font-size: 13px; font-family: var(--font-body);
+    }
+    .icon-btn:hover { color: var(--cream); background: var(--card); }
+    .main { flex: 1; padding: 40px 20px; }
+    .container { max-width: 760px; margin: 0 auto; }
+    .screen { display: none; }
+    .screen.active { display: block; }
+    .page-title {
+      font-family: var(--font-head); font-size: 36px; font-weight: 300;
+      letter-spacing: 0.02em; color: var(--cream); margin-bottom: 6px; line-height: 1.2;
+    }
+    .page-subtitle { font-size: 14px; color: var(--muted); margin-bottom: 36px; }
+    .section-label {
+      font-size: 10px; font-weight: 600; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 10px;
+    }
+    .idea-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 20px 22px;
+      cursor: pointer; transition: border-color var(--transition), background var(--transition);
+      margin-bottom: 10px; display: flex; align-items: flex-start;
+      justify-content: space-between; gap: 16px;
+    }
+    .idea-card:hover { border-color: var(--amber-dim); background: var(--surface); }
+    .idea-card-body { flex: 1; min-width: 0; }
+    .idea-card h3 {
+      font-family: var(--font-head); font-size: 20px; font-weight: 400;
+      color: var(--cream); margin-bottom: 4px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .idea-card p {
+      font-size: 13px; color: var(--muted);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .idea-card-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+    .badge {
+      display: inline-block; font-size: 10px; font-weight: 600;
+      letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 9px; border-radius: 3px;
+    }
+    .badge-draft { background: rgba(122,112,103,0.2); color: var(--muted-hi); }
+    .badge-developing { background: rgba(196,146,58,0.15); color: var(--amber); border: 1px solid var(--amber-dim); }
+    .badge-ready { background: rgba(90,154,106,0.15); color: var(--success); }
+    .idea-date { font-size: 11px; color: var(--muted); }
+    .btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 11px 22px; border-radius: var(--radius);
+      font-size: 14px; font-weight: 500; font-family: var(--font-body);
+      cursor: pointer; border: none; transition: all var(--transition);
+    }
+    .btn-primary { background: var(--amber); color: #0C0B09; }
+    .btn-primary:hover { background: #D4A040; }
+    .btn-ghost {
+      background: transparent; color: var(--muted-hi);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { border-color: var(--border-hi); color: var(--cream); background: var(--card); }
+    .btn-text {
+      background: none; border: none; color: var(--amber);
+      font-size: 13px; padding: 6px 0; cursor: pointer; font-family: var(--font-body);
+    }
+    .btn-text:hover { color: #D4A040; }
+    .btn-danger { background: transparent; color: var(--danger); border: 1px solid rgba(184,84,84,0.3); }
+    .btn-danger:hover { background: rgba(184,84,84,0.1); }
+    .btn-group { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .field { margin-bottom: 28px; }
+    input[type="text"], input[type="email"], input[type="password"], textarea, select {
+      width: 100%; background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); color: var(--cream);
+      font-family: var(--font-body); font-size: 14px;
+      padding: 12px 14px; outline: none; transition: border-color var(--transition);
+      -webkit-appearance: none;
+    }
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--amber-dim); box-shadow: 0 0 0 3px var(--amber-glow);
+    }
+    input::placeholder, textarea::placeholder { color: var(--muted); }
+    textarea { resize: vertical; min-height: 100px; line-height: 1.7; }
+    .beats-textarea {
+      font-family: var(--font-mono); font-size: 14px; min-height: 280px;
+      line-height: 1.9; background: var(--surface); padding: 18px 20px;
+    }
+    .divider { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+    .note-box {
+      background: var(--card); border-left: 2px solid var(--amber);
+      padding: 14px 18px; font-size: 13px; color: var(--muted-hi);
+      border-radius: 0 var(--radius) var(--radius) 0; margin-bottom: 24px;
+    }
+    .version-bar {
+      display: flex; border: 1px solid var(--border); border-radius: var(--radius);
+      overflow: hidden; margin-bottom: 20px; background: var(--surface);
+    }
+    .version-tab {
+      flex: 1; padding: 9px 14px; font-size: 12px; font-weight: 500;
+      text-align: center; cursor: pointer; border: none; background: transparent;
+      color: var(--muted); font-family: var(--font-body);
+      transition: all var(--transition); border-right: 1px solid var(--border);
+    }
+    .version-tab:last-child { border-right: none; }
+    .version-tab.active { background: var(--amber); color: #0C0B09; font-weight: 600; }
+    .version-tab:hover:not(.active) { background: var(--card); color: var(--cream); }
+    .preview-box {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 24px;
+      font-family: var(--font-mono); font-size: 13px; line-height: 1.8;
+      white-space: pre-wrap; word-break: break-word;
+      max-height: 380px; overflow-y: auto; color: var(--cream); margin-bottom: 20px;
+    }
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.75); z-index: 200;
+      align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 32px;
+      max-width: 520px; width: 100%; max-height: 90vh; overflow-y: auto;
+    }
+    .modal-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; }
+    .modal-title { font-family: var(--font-head); font-size: 24px; font-weight: 400; color: var(--cream); }
+    .modal-close {
+      background: none; border: none; color: var(--muted); cursor: pointer;
+      font-size: 20px; padding: 0; line-height: 1; transition: color var(--transition);
+    }
+    .modal-close:hover { color: var(--cream); }
+    .suggestion-block {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 16px 18px; margin-bottom: 12px;
+    }
+    .suggestion-beat {
+      font-family: var(--font-mono); font-size: 13px; line-height: 1.9;
+      color: var(--cream); display: block;
+    }
+    .suggestion-label {
+      font-family: var(--font-body); font-size: 10px; font-weight: 600;
+      letter-spacing: 0.1em; text-transform: uppercase; color: var(--amber); margin-bottom: 10px;
+    }
+    .step-track { display: flex; align-items: center; margin-bottom: 40px; }
+    .step-dot {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--card); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 600; color: var(--muted); flex-shrink: 0;
+      transition: all var(--transition);
+    }
+    .step-dot.done  { background: var(--amber); border-color: var(--amber); color: #0C0B09; }
+    .step-dot.current { border-color: var(--amber); color: var(--amber); }
+    .step-line { flex: 1; height: 1px; background: var(--border); }
+    .empty-state { text-align: center; padding: 64px 20px; color: var(--muted); }
+    .empty-state-title {
+      font-family: var(--font-head); font-size: 28px; font-weight: 300;
+      color: var(--muted-hi); margin-bottom: 10px;
+    }
+    .empty-state p { font-size: 14px; margin-bottom: 28px; }
+    .settings-section { margin-bottom: 36px; }
+    .settings-section-title { font-family: var(--font-head); font-size: 20px; font-weight: 400; color: var(--cream); margin-bottom: 4px; }
+    .settings-section-desc { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+    .github-status {
+      display: flex; align-items: center; gap: 8px; font-size: 12px;
+      padding: 8px 12px; border-radius: var(--radius); margin-top: 12px;
+    }
+    .github-status.connected { background: rgba(90,154,106,0.1); color: var(--success); border: 1px solid rgba(90,154,106,0.2); }
+    .github-status.disconnected { background: rgba(122,112,103,0.1); color: var(--muted); border: 1px solid var(--border); }
+    .search-wrap { position: relative; margin-bottom: 24px; }
+    .search-wrap input { padding-left: 36px; }
+    .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+    .home-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 36px; gap: 16px; flex-wrap: wrap; }
+    .editor-title-input {
+      background: transparent; border: none;
+      font-family: var(--font-head); font-size: 32px; font-weight: 300;
+      color: var(--cream); width: 100%; padding: 0;
+      border-bottom: 1px solid transparent; transition: border-color var(--transition); border-radius: 0;
+    }
+    .editor-title-input:focus { outline: none; border-bottom-color: var(--amber-dim); box-shadow: none; }
+    .editor-status { display: flex; align-items: center; gap: 12px; margin-top: 10px; margin-bottom: 28px; }
+    select.status-select {
+      width: auto; font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
+      text-transform: uppercase; padding: 4px 10px; border-radius: 4px;
+      background: var(--card); border: 1px solid var(--border); color: var(--muted-hi);
+    }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+    @media (max-width: 600px) {
+      .topbar { padding: 0 16px; }
+      .main { padding: 24px 16px; }
+      .page-title { font-size: 28px; }
+      .modal { padding: 24px; }
+      .home-header { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <nav class="topbar">
+    <div class="topbar-logo" onclick="nav('home')">Sketch<span>book</span></div>
+    <div class="topbar-right">
+      <span class="save-indicator" id="saveIndicator"></span>
+      <button class="icon-btn" onclick="nav('settings')">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+        Settings
+      </button>
+    </div>
+  </nav>
+
+  <main class="main">
+    <div class="container">
+
+      <!-- HOME -->
+      <div class="screen active" id="screen-home">
+        <div class="home-header">
+          <div>
+            <div class="page-title">Your Ideas</div>
+            <div class="page-subtitle">The sketchpad for what hasn't been made yet</div>
+          </div>
+          <button class="btn btn-primary" onclick="startNewIdea()">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            New Idea
+          </button>
+        </div>
+        <div class="search-wrap">
+          <span class="search-icon">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </span>
+          <input type="text" placeholder="Search ideas..." id="searchInput" oninput="renderIdeas()">
+        </div>
+        <div id="ideasList"></div>
+      </div>
+
+      <!-- CAPTURE -->
+      <div class="screen" id="screen-capture">
+        <div class="page-title">Capture your idea</div>
+        <div class="page-subtitle">Don't overthink it. What's the story in your head right now?</div>
+        <div class="step-track">
+          <div class="step-dot current">1</div><div class="step-line"></div>
+          <div class="step-dot">2</div><div class="step-line"></div>
+          <div class="step-dot">3</div><div class="step-line"></div>
+          <div class="step-dot">4</div>
+        </div>
+        <div class="field">
+          <div class="section-label">The rough idea</div>
+          <textarea id="captureText" placeholder="A guy wakes up and realises he should have told her years ago. What does that kind of regret feel like? Where does it sit in your chest?..." rows="7"></textarea>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-ghost" onclick="nav('home')">← Back</button>
+          <button class="btn btn-primary" onclick="goFromCapture()">Next: Refine →</button>
+        </div>
+      </div>
+
+      <!-- THEME & PITCH -->
+      <div class="screen" id="screen-theme">
+        <div class="page-title">Sharpen the idea</div>
+        <div class="page-subtitle">Distil what you've got into something you could say in a lift</div>
+        <div class="step-track">
+          <div class="step-dot done">✓</div><div class="step-line"></div>
+          <div class="step-dot current">2</div><div class="step-line"></div>
+          <div class="step-dot">3</div><div class="step-line"></div>
+          <div class="step-dot">4</div>
+        </div>
+        <div class="field">
+          <div class="section-label">The big emotional question</div>
+          <input type="text" id="themeInput" placeholder="e.g. How do people live with regret?">
+        </div>
+        <div class="field">
+          <div class="section-label">30-second pitch</div>
+          <textarea id="pitchInput" placeholder="Sum it up in two or three sentences. What happens? Who's it about? Why does it matter?" rows="4"></textarea>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-ghost" onclick="nav('capture')">← Back</button>
+          <button class="btn btn-ghost" onclick="skipToEditor()">Skip this →</button>
+          <button class="btn btn-primary" onclick="goFromTheme()">Next: Story Beats →</button>
+        </div>
+      </div>
+
+      <!-- EDITOR -->
+      <div class="screen" id="screen-editor">
+        <input type="text" class="editor-title-input" id="editorTitle" placeholder="Title your idea..." oninput="draftSave()">
+        <div class="editor-status">
+          <select class="status-select" id="statusSelect" onchange="draftSave()">
+            <option value="draft">Draft</option>
+            <option value="developing">In Development</option>
+            <option value="ready">Ready to Pitch</option>
+          </select>
+        </div>
+        <div id="contextSummary" style="display:none; margin-bottom:24px;">
+          <div class="section-label">Theme</div>
+          <div style="font-size:14px; color:var(--muted-hi); margin-bottom:16px;" id="contextTheme"></div>
+          <div class="section-label">Pitch</div>
+          <div style="font-size:14px; color:var(--muted-hi); margin-bottom:0;" id="contextPitch"></div>
+          <hr class="divider">
+        </div>
+        <div id="versionBarWrap" style="display:none; margin-bottom:4px;">
+          <div class="section-label" style="margin-bottom:8px;">Versions</div>
+          <div class="version-bar" id="versionBar"></div>
+        </div>
+        <div class="field" style="margin-top:20px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+            <div class="section-label" style="margin-bottom:0;">Story Beats</div>
+            <button class="btn-text" onclick="showSuggestions()">Get beat ideas</button>
+          </div>
+          <div class="note-box" id="beatsHint">One beat per line. Don't worry about format. Just get it down.</div>
+          <textarea class="beats-textarea" id="beatsEditor" placeholder="• Guy wakes up, something feels off&#10;• Flashback: the moment he should have said it&#10;• He finds a way to reach her&#10;• Too late" oninput="draftSave()"></textarea>
+        </div>
+        <div class="btn-group" style="margin-bottom:16px;">
+          <button class="btn btn-ghost" onclick="createNewVersion()">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            Save as new version
+          </button>
+          <button class="btn btn-primary" onclick="nav('export')">Export →</button>
+        </div>
+        <div class="btn-group">
+          <button class="btn-text" style="color:var(--muted);" onclick="nav('home')">← All ideas</button>
+          <button class="btn-text" style="color:var(--danger); margin-left:auto;" onclick="deleteCurrentIdea()">Delete idea</button>
+        </div>
+      </div>
+
+      <!-- EXPORT -->
+      <div class="screen" id="screen-export">
+        <div class="page-title">Export your idea</div>
+        <div class="page-subtitle">Ready to move to Final Draft, Celtx, or wherever you write</div>
+        <div class="step-track">
+          <div class="step-dot done">✓</div><div class="step-line"></div>
+          <div class="step-dot done">✓</div><div class="step-line"></div>
+          <div class="step-dot done">✓</div><div class="step-line"></div>
+          <div class="step-dot current">4</div>
+        </div>
+        <div class="field">
+          <div class="section-label">Filename</div>
+          <input type="text" id="filenameInput" value="">
+        </div>
+        <div class="field">
+          <div class="section-label">Preview</div>
+          <div class="preview-box" id="exportPreview"></div>
+        </div>
+        <div class="btn-group" style="margin-bottom:20px;">
+          <button class="btn btn-ghost" onclick="copyToClipboard(event)">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy to clipboard
+          </button>
+          <button class="btn btn-primary" onclick="downloadFile()">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download .md
+          </button>
+        </div>
+        <div id="githubExportSection" style="display:none;">
+          <hr class="divider">
+          <div class="section-label">GitHub</div>
+          <p style="font-size:13px; color:var(--muted); margin-bottom:12px;">Commit this idea to your connected repo as a markdown file.</p>
+          <button class="btn btn-ghost" onclick="commitToGithub(event)" id="githubCommitBtn">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+            Save to GitHub repo
+          </button>
+        </div>
+        <hr class="divider">
+        <button class="btn-text" style="color:var(--muted);" onclick="nav('editor')">← Back to editor</button>
+      </div>
+
+      <!-- SETTINGS -->
+      <div class="screen" id="screen-settings">
+        <div class="page-title">Settings</div>
+        <div class="page-subtitle">Sketchbook configuration</div>
+        <div class="settings-section">
+          <div class="settings-section-title">GitHub Storage</div>
+          <div class="settings-section-desc">Connect a GitHub repo and every idea you save will be committed as a markdown file. Your creative work, version-controlled in git.</div>
+          <div class="field">
+            <div class="section-label">Personal Access Token</div>
+            <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+          </div>
+          <div class="field">
+            <div class="section-label">Repository (owner/repo)</div>
+            <input type="text" id="ghRepo" placeholder="yourname/my-ideas">
+          </div>
+          <div id="githubStatusDisplay"></div>
+          <div class="btn-group" style="margin-top:16px;">
+            <button class="btn btn-ghost" onclick="testGithubConnection()">Test connection</button>
+            <button class="btn btn-primary" onclick="saveGithubSettings()">Save</button>
+          </div>
+        </div>
+        <hr class="divider">
+        <div class="settings-section">
+          <div class="settings-section-title">Data</div>
+          <div class="settings-section-desc">All ideas are stored in your browser. Export individual ideas or download everything.</div>
+          <div class="btn-group">
+            <button class="btn btn-ghost" onclick="exportAll()">Export all ideas (.md)</button>
+            <button class="btn btn-danger" onclick="clearAll()">Clear all data</button>
+          </div>
+        </div>
+        <hr class="divider">
+        <button class="btn-text" style="color:var(--muted);" onclick="nav('home')">← Back to ideas</button>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- Beat suggestions modal -->
+<div class="modal-overlay" id="suggestionsModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Beat ideas to explore</div>
+      <button class="modal-close" onclick="closeSuggestions()">×</button>
+    </div>
+    <div class="note-box" style="font-size:12px;">AI-generated suggestions. Use them, remix them, or ignore them. You're the author.</div>
+    <div id="suggestionsContent"></div>
+    <div class="btn-group" style="margin-top:20px;">
+      <button class="btn btn-ghost" onclick="rotateSuggestions()">Different approach ↻</button>
+      <button class="btn btn-ghost" onclick="closeSuggestions()">Keep my beats</button>
+      <button class="btn btn-primary" onclick="useCurrentSuggestion()">Use as starting point</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Data layer ──────────────────────────────────────────────────
+const STORE_KEY = 'sketchbook_v1';
+
+function loadStore() {
+  try { return JSON.parse(localStorage.getItem(STORE_KEY)) || { ideas: [], settings: {} }; }
+  catch { return { ideas: [], settings: {} }; }
+}
+function saveStore(store) { localStorage.setItem(STORE_KEY, JSON.stringify(store)); }
+function getStore() { return loadStore(); }
+
+function upsertIdea(idea) {
+  const store = getStore();
+  const idx = store.ideas.findIndex(i => i.id === idea.id);
+  if (idx >= 0) store.ideas[idx] = idea;
+  else store.ideas.unshift(idea);
+  saveStore(store);
+  syncToGitHub(idea);
+}
+
+function removeIdea(id) {
+  const store = getStore();
+  store.ideas = store.ideas.filter(i => i.id !== id);
+  saveStore(store);
+}
+
+function genId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+// ── State ───────────────────────────────────────────────────────
+let currentIdeaId = null;
+let autoSaveTimer = null;
+
+function getCurrentIdea() {
+  if (!currentIdeaId) return null;
+  return getStore().ideas.find(i => i.id === currentIdeaId) || null;
+}
+
+// ── Navigation ──────────────────────────────────────────────────
+function nav(screen) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + screen).classList.add('active');
+  window.scrollTo(0, 0);
+  if (screen === 'export') buildExportPreview();
+  if (screen === 'settings') loadSettingsForm();
+  if (screen === 'home') renderIdeas();
+}
+
+// ── Home / list ─────────────────────────────────────────────────
+function renderIdeas() {
+  const store = getStore();
+  const query = (document.getElementById('searchInput')?.value || '').toLowerCase();
+  const list = document.getElementById('ideasList');
+  list.textContent = '';
+
+  let ideas = store.ideas.slice().sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+  if (query) {
+    ideas = ideas.filter(i =>
+      [i.title, i.theme, i.pitch, i.captureText].some(f => (f || '').toLowerCase().includes(query))
+    );
+  }
+
+  if (!ideas.length) {
+    const empty = document.createElement('div');
+    empty.className = 'empty-state';
+    const title = document.createElement('div');
+    title.className = 'empty-state-title';
+    title.textContent = query ? 'No ideas match that search' : 'No ideas yet';
+    const desc = document.createElement('p');
+    desc.textContent = query ? 'Try a different word.' : 'Every great story started as a half-formed thought.';
+    empty.appendChild(title);
+    empty.appendChild(desc);
+    if (!query) {
+      const btn = document.createElement('button');
+      btn.className = 'btn btn-primary';
+      btn.textContent = 'Capture your first idea';
+      btn.onclick = startNewIdea;
+      empty.appendChild(btn);
+    }
+    list.appendChild(empty);
+    return;
+  }
+
+  ideas.forEach(idea => {
+    const card = document.createElement('div');
+    card.className = 'idea-card';
+    card.onclick = () => openIdea(idea.id);
+
+    const body = document.createElement('div');
+    body.className = 'idea-card-body';
+
+    const h3 = document.createElement('h3');
+    h3.textContent = idea.title || 'Untitled idea';
+
+    const desc = document.createElement('p');
+    desc.textContent = idea.theme || idea.pitch || idea.captureText || 'No description yet';
+
+    body.appendChild(h3);
+    body.appendChild(desc);
+
+    const meta = document.createElement('div');
+    meta.className = 'idea-card-meta';
+
+    const badge = document.createElement('span');
+    badge.className = 'badge ' + (idea.status === 'developing' ? 'badge-developing' : idea.status === 'ready' ? 'badge-ready' : 'badge-draft');
+    badge.textContent = idea.status === 'developing' ? 'Developing' : idea.status === 'ready' ? 'Ready' : 'Draft';
+
+    const dateEl = document.createElement('span');
+    dateEl.className = 'idea-date';
+    const vCount = idea.versions ? idea.versions.length : 1;
+    dateEl.textContent = relDate(idea.updatedAt) + (vCount > 1 ? ' · V' + vCount : '');
+
+    meta.appendChild(badge);
+    meta.appendChild(dateEl);
+
+    card.appendChild(body);
+    card.appendChild(meta);
+    list.appendChild(card);
+  });
+}
+
+function relDate(ts) {
+  if (!ts) return '';
+  const diff = Date.now() - ts;
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return 'just now';
+  if (m < 60) return m + 'm ago';
+  const h = Math.floor(m / 60);
+  if (h < 24) return h + 'h ago';
+  const d = Math.floor(h / 24);
+  if (d < 7) return d + 'd ago';
+  return new Date(ts).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
+}
+
+// ── New idea flow ───────────────────────────────────────────────
+function startNewIdea() {
+  currentIdeaId = genId();
+  upsertIdea({
+    id: currentIdeaId, title: '', captureText: '', theme: '', pitch: '',
+    versions: [{ num: 1, beats: '', createdAt: Date.now() }],
+    currentVersion: 0, status: 'draft',
+    createdAt: Date.now(), updatedAt: Date.now()
+  });
+  document.getElementById('captureText').value = '';
+  nav('capture');
+}
+
+function goFromCapture() {
+  const idea = getCurrentIdea();
+  if (!idea) return;
+  const text = document.getElementById('captureText').value.trim();
+  idea.captureText = text;
+  if (!idea.title && text) idea.title = text.split(/[.!?\n]/)[0].substring(0, 60).trim();
+  idea.updatedAt = Date.now();
+  upsertIdea(idea);
+  document.getElementById('themeInput').value = idea.theme || '';
+  document.getElementById('pitchInput').value = idea.pitch || '';
+  nav('theme');
+}
+
+function goFromTheme() {
+  const idea = getCurrentIdea();
+  if (!idea) return;
+  idea.theme = document.getElementById('themeInput').value.trim();
+  idea.pitch  = document.getElementById('pitchInput').value.trim();
+  idea.updatedAt = Date.now();
+  upsertIdea(idea);
+  loadEditor();
+  nav('editor');
+}
+
+function skipToEditor() {
+  const idea = getCurrentIdea();
+  if (!idea) return;
+  idea.theme = document.getElementById('themeInput').value.trim();
+  idea.pitch  = document.getElementById('pitchInput').value.trim();
+  idea.updatedAt = Date.now();
+  upsertIdea(idea);
+  loadEditor();
+  nav('editor');
+}
+
+// ── Open existing ───────────────────────────────────────────────
+function openIdea(id) {
+  currentIdeaId = id;
+  loadEditor();
+  nav('editor');
+}
+
+function loadEditor() {
+  const idea = getCurrentIdea();
+  if (!idea) return;
+
+  document.getElementById('editorTitle').value = idea.title || '';
+  document.getElementById('statusSelect').value = idea.status || 'draft';
+
+  const ctxWrap = document.getElementById('contextSummary');
+  if (idea.theme || idea.pitch) {
+    document.getElementById('contextTheme').textContent = idea.theme || '—';
+    document.getElementById('contextPitch').textContent = idea.pitch || '—';
+    ctxWrap.style.display = 'block';
+  } else {
+    ctxWrap.style.display = 'none';
+  }
+
+  const versions = idea.versions || [];
+  const vBarWrap = document.getElementById('versionBarWrap');
+  const vBar = document.getElementById('versionBar');
+  vBar.textContent = '';
+
+  if (versions.length > 1) {
+    vBarWrap.style.display = 'block';
+    versions.forEach((v, idx) => {
+      const btn = document.createElement('button');
+      btn.className = 'version-tab' + (idx === idea.currentVersion ? ' active' : '');
+      btn.textContent = 'V' + v.num;
+      btn.onclick = () => switchVersion(idx);
+      vBar.appendChild(btn);
+    });
+  } else {
+    vBarWrap.style.display = 'none';
+  }
+
+  const cv = idea.currentVersion ?? 0;
+  const beats = (versions[cv] || {}).beats || '';
+  document.getElementById('beatsEditor').value = beats;
+  document.getElementById('beatsHint').style.display = beats ? 'none' : 'block';
+}
+
+function switchVersion(idx) {
+  const idea = getCurrentIdea();
+  if (!idea) return;
+  idea.currentVersion = idx;
+  upsertIdea(idea);
+  loadEditor();
+}
+
+function createNewVersion() {
+  const idea = getCurrentIdea();
+  if (!idea) return;
+  const cv = idea.currentVersion ?? 0;
+  idea.versions[cv].beats = document.getElementById('beatsEditor').value;
+  const newNum = idea.versions.length + 1;
+  idea.versions.push({ num: newNum, beats: idea.versions[cv].beats, createdAt: Date.now() });
+  idea.currentVersion = idea.versions.length - 1;
+  idea.updatedAt = Date.now();
+  upsertIdea(idea);
+  loadEditor();
+  setSaveState('saved');
+}
+
+// ── Auto-save ───────────────────────────────────────────────────
+function draftSave() {
+  setSaveState('saving');
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer = setTimeout(() => {
+    persistEditorState();
+    setSaveState('saved');
+    setTimeout(() => setSaveState(''), 2000);
+  }, 800);
+}
+
+function persistEditorState() {
+  const idea = getCurrentIdea();
+  if (!idea) return;
+  idea.title  = document.getElementById('editorTitle').value;
+  idea.status = document.getElementById('statusSelect').value;
+  const cv = idea.currentVersion ?? 0;
+  if (!idea.versions[cv]) idea.versions[cv] = { num: cv + 1, beats: '', createdAt: Date.now() };
+  idea.versions[cv].beats = document.getElementById('beatsEditor').value;
+  idea.updatedAt = Date.now();
+  upsertIdea(idea);
+}
+
+function setSaveState(state) {
+  const el = document.getElementById('saveIndicator');
+  el.className = 'save-indicator ' + state;
+  el.textContent = state === 'saving' ? 'Saving…' : state === 'saved' ? 'Saved' : '';
+}
+
+// ── Delete ──────────────────────────────────────────────────────
+function deleteCurrentIdea() {
+  if (!currentIdeaId) return;
+  if (!confirm('Delete this idea? This cannot be undone.')) return;
+  removeIdea(currentIdeaId);
+  currentIdeaId = null;
+  nav('home');
+}
+
+// ── Export ──────────────────────────────────────────────────────
+function buildExportPreview() {
+  persistEditorState();
+  const idea = getCurrentIdea();
+  if (!idea) return;
+  const cv = idea.currentVersion ?? 0;
+  const vNum = (idea.versions[cv] || {}).num || 1;
+  const md = generateMarkdown(idea, cv);
+  document.getElementById('exportPreview').textContent = md;
+  const slug = (idea.title || 'idea').replace(/[^a-z0-9]+/gi, '_').replace(/^_|_$/g, '');
+  document.getElementById('filenameInput').value = slug + '_v' + vNum + '.md';
+
+  const store = getStore();
+  document.getElementById('githubExportSection').style.display =
+    store.settings?.githubToken ? 'block' : 'none';
+}
+
+function generateMarkdown(idea, versionIdx) {
+  const cv = versionIdx ?? idea.currentVersion ?? 0;
+  const v = idea.versions[cv] || {};
+  const date = new Date(idea.createdAt || Date.now()).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+  let md = '# ' + (idea.title || 'Untitled') + '\n\n';
+  if (idea.theme) md += '## Theme\n' + idea.theme + '\n\n';
+  if (idea.pitch) md += '## Pitch\n' + idea.pitch + '\n\n';
+  md += '## Story Beats (Version ' + (v.num || 1) + ')\n' + (v.beats || '') + '\n\n';
+  md += '---\n*Created ' + date + ' · Sketchbook*';
+  return md;
+}
+
+function copyToClipboard(e) {
+  const text = document.getElementById('exportPreview').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = e.target.closest('button');
+    const orig = btn.textContent;
+    btn.textContent = '✓ Copied';
+    setTimeout(() => { btn.textContent = orig; }, 2000);
+  });
+}
+
+function downloadFile() {
+  const text = document.getElementById('exportPreview').textContent;
+  const filename = document.getElementById('filenameInput').value || 'idea.md';
+  const a = document.createElement('a');
+  a.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(text);
+  a.download = filename;
+  a.click();
+}
+
+// ── GitHub integration ──────────────────────────────────────────
+async function syncToGitHub(idea) {
+  const store = getStore();
+  const { githubToken, githubRepo } = store.settings || {};
+  if (!githubToken || !githubRepo) return;
+  const parts = githubRepo.split('/');
+  if (parts.length !== 2) return;
+  const [owner, repo] = parts;
+  const content = generateMarkdown(idea, idea.currentVersion ?? 0);
+  const path = 'ideas/' + idea.id + '.md';
+  const encoded = btoa(unescape(encodeURIComponent(content)));
+  try {
+    const checkRes = await fetch('https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + path, {
+      headers: { Authorization: 'token ' + githubToken, Accept: 'application/vnd.github.v3+json' }
+    });
+    const sha = checkRes.ok ? (await checkRes.json()).sha : undefined;
+    await fetch('https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + path, {
+      method: 'PUT',
+      headers: {
+        Authorization: 'token ' + githubToken,
+        Accept: 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        message: 'Update idea: ' + (idea.title || 'Untitled'),
+        content: encoded,
+        ...(sha ? { sha } : {})
+      })
+    });
+  } catch (e) {
+    console.warn('GitHub sync failed:', e);
+  }
+}
+
+async function commitToGithub(e) {
+  persistEditorState();
+  const idea = getCurrentIdea();
+  if (!idea) return;
+  const btn = e.target.closest('button');
+  btn.textContent = 'Saving…';
+  btn.disabled = true;
+  await syncToGitHub(idea);
+  btn.textContent = '✓ Saved to GitHub';
+  setTimeout(() => {
+    btn.textContent = 'Save to GitHub repo';
+    btn.disabled = false;
+  }, 3000);
+}
+
+async function testGithubConnection() {
+  const token = document.getElementById('ghToken').value.trim();
+  const repoStr = document.getElementById('ghRepo').value.trim();
+  if (!token || !repoStr) { showGithubStatus('disconnected', 'Enter a token and repo first.'); return; }
+  const [owner, repo] = repoStr.split('/');
+  try {
+    const res = await fetch('https://api.github.com/repos/' + owner + '/' + repo, {
+      headers: { Authorization: 'token ' + token, Accept: 'application/vnd.github.v3+json' }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      showGithubStatus('connected', 'Connected: ' + data.full_name);
+    } else {
+      showGithubStatus('disconnected', 'Error ' + res.status + ': check token and repo name.');
+    }
+  } catch {
+    showGithubStatus('disconnected', 'Connection failed. Check your network.');
+  }
+}
+
+function showGithubStatus(state, msg) {
+  const el = document.getElementById('githubStatusDisplay');
+  el.textContent = '';
+  const div = document.createElement('div');
+  div.className = 'github-status ' + state;
+  const dot = document.createTextNode((state === 'connected' ? '● ' : '○ ') + msg);
+  div.appendChild(dot);
+  el.appendChild(div);
+}
+
+function saveGithubSettings() {
+  const store = getStore();
+  store.settings = store.settings || {};
+  store.settings.githubToken = document.getElementById('ghToken').value.trim();
+  store.settings.githubRepo  = document.getElementById('ghRepo').value.trim();
+  saveStore(store);
+  showGithubStatus('connected', 'Settings saved.');
+}
+
+function loadSettingsForm() {
+  const s = getStore().settings || {};
+  document.getElementById('ghToken').value = s.githubToken || '';
+  document.getElementById('ghRepo').value  = s.githubRepo  || '';
+  const display = document.getElementById('githubStatusDisplay');
+  display.textContent = '';
+  if (s.githubToken && s.githubRepo) showGithubStatus('connected', 'Repo: ' + s.githubRepo);
+}
+
+// ── Beat suggestions ────────────────────────────────────────────
+const SUGGESTION_SETS = [
+  {
+    label: 'Approach A — Enter through the body',
+    beats: [
+      '• Opening image: something ordinary, something off',
+      '• A specific object triggers the memory',
+      '• The flashback: the exact moment he held back',
+      '• Return to present: he searches for her',
+      '• He finds her. She\'s completely fine. She moved on.',
+      '• He sits with it. No resolution. Just the weight.'
+    ]
+  },
+  {
+    label: 'Approach B — Enter through absence',
+    beats: [
+      '• Cold open: she\'s already gone from his world',
+      '• We understand why, slowly, through fragments',
+      '• One mutual friend. One conversation too revealing.',
+      '• He rehearses what he\'d say. Again and again.',
+      '• The moment he almost reaches out — then doesn\'t.',
+      '• Final image: the space where she used to be.'
+    ]
+  },
+  {
+    label: 'Approach C — Enter through imagination',
+    beats: [
+      '• The idea arrives like weather — no warning',
+      '• He maps the path not taken, beat by beat',
+      '• A version of the story where he said it',
+      '• Back to reality: the difference is brutal and small',
+      '• He chooses to carry it rather than resolve it',
+      '• End where we began — but we understand it now.'
+    ]
+  }
+];
+
+let suggestionIndex = 0;
+
+function showSuggestions() {
+  suggestionIndex = 0;
+  renderSuggestions();
+  document.getElementById('suggestionsModal').classList.add('open');
+}
+
+function renderSuggestions() {
+  const content = document.getElementById('suggestionsContent');
+  content.textContent = '';
+  const set = SUGGESTION_SETS[suggestionIndex];
+
+  const block = document.createElement('div');
+  block.className = 'suggestion-block';
+
+  const label = document.createElement('div');
+  label.className = 'suggestion-label';
+  label.textContent = set.label;
+  block.appendChild(label);
+
+  set.beats.forEach(beat => {
+    const span = document.createElement('span');
+    span.className = 'suggestion-beat';
+    span.textContent = beat;
+    block.appendChild(span);
+  });
+
+  content.appendChild(block);
+}
+
+function rotateSuggestions() {
+  suggestionIndex = (suggestionIndex + 1) % SUGGESTION_SETS.length;
+  renderSuggestions();
+}
+
+function useCurrentSuggestion() {
+  const beats = SUGGESTION_SETS[suggestionIndex].beats.join('\n');
+  document.getElementById('beatsEditor').value = beats;
+  draftSave();
+  closeSuggestions();
+}
+
+function closeSuggestions() {
+  document.getElementById('suggestionsModal').classList.remove('open');
+}
+
+document.getElementById('suggestionsModal').addEventListener('click', function(e) {
+  if (e.target === this) closeSuggestions();
+});
+
+// ── Data management ─────────────────────────────────────────────
+function exportAll() {
+  const store = getStore();
+  if (!store.ideas.length) { alert('No ideas to export.'); return; }
+  const combined = store.ideas.map(idea => generateMarkdown(idea, idea.currentVersion ?? 0)).join('\n\n---\n\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(combined);
+  a.download = 'all_ideas.md';
+  a.click();
+}
+
+function clearAll() {
+  if (!confirm('This will permanently delete all ideas. Are you sure?')) return;
+  if (!confirm('Last chance — delete everything?')) return;
+  localStorage.removeItem(STORE_KEY);
+  currentIdeaId = null;
+  nav('home');
+}
+
+// ── Boot ────────────────────────────────────────────────────────
+renderIdeas();
+</script>
+</body>
+</html>
